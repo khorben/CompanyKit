@@ -1,0 +1,31 @@
+jicofo {
+  authentication: {
+    enabled: true
+    type: XMPP
+    login-url: @@HOSTNAME@@
+    enable-auto-login: true
+  }
+  bridge: {
+    brewery-jid: "JvbBrewery@internal.auth.@@HOSTNAME@@"
+    selection-strategy: RegionBasedBridgeSelectionStrategy
+  }
+  local-region: europe
+  octo: {
+    enabled: false
+  }
+  sctp: {
+    enabled: false
+  }
+  xmpp: {
+    client: {
+      enabled: true
+      hostname: 127.0.0.1
+      domain: auth.@@HOSTNAME@@
+      username: focus
+      password: "VIRTUSER_FOCUS_PASSWORD"
+      client-proxy: focus.@@HOSTNAME@@
+      conference-muc-jid: conference.@@HOSTNAME@@
+      //use-tls: false
+    }
+  }
+}

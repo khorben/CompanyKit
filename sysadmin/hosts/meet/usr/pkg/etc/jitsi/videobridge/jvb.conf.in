@@ -1,0 +1,46 @@
+videobridge {
+  http-servers {
+    public {
+      port = 9090
+    }
+  }
+  websockets {
+    enabled = true
+    domain = "@@HOSTNAME@@:443"
+    tls = true
+  }
+  ice {
+    tcp {
+      enabled = true
+      port = 4443
+      ssltcp = true
+    }
+    udp {
+        port = 10000
+    }
+  }
+  stats {
+    # Enable broadcasting stats/presence in a MUC
+    enabled = true
+    transports = [
+      { type = "muc" }
+    ]
+  }
+  sctp {
+    enabled = false
+  }
+  apis {
+    xmpp-client {
+      configs {
+        xmpp-server-1 {
+          hostname = 127.0.0.1
+          domain = auth.@@HOSTNAME@@
+          username = jvb
+          password = "@@VIRTUSER_JVB_PASSWORD@@"
+          muc_jids = "JvbBrewery@internal.auth.@@HOSTNAME@@"
+          muc_nickname = videobridge-1
+        }
+      }
+    }
+  }
+}

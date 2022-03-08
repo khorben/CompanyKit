@@ -1,0 +1,9 @@
+<title>@@HOSTNAME@@</title>
+<meta property="og:title" content="@@HOSTNAME@@"/>
+<meta property="og:image" content="images/jitsilogo.png?v=1"/>
+<meta property="og:description" content="Join a WebRTC video conference with @@DOMAIN@@"/>
+<meta description="Join a WebRTC video conference powered by the Jitsi Videobridge"/>
+<meta itemprop="name" content="@@HOSTNAME@@"/>
+<meta itemprop="description" content="Join a WebRTC video conference with @@DOMAIN@@"/>
+<meta itemprop="image" content="images/jitsilogo.png?v=1"/>
+<link rel="icon" type="image/png" href="images/favicon.ico?v=1"/>
