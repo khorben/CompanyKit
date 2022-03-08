@@ -1,0 +1,2 @@
+RENEW_HOSTS="auth.@@HOSTNAME@@"
+RENEW_SERVICES="prosody"
