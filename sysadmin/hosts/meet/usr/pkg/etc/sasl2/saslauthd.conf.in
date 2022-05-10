@@ -1,0 +1,6 @@
+ldap_servers: ldap://auth.@DOMAIN@
+ldap_bind_dn: cn=@LDAP_ROOT_USERNAME@,@LDAP_BASE@
+ldap_bind_pw: @LDAP_ROOT_PASSWORD@
+ldap_auth_method: bind
+ldap_search_base: ou=Users,@LDAP_BASE@
+ldap_filter: (&(uid=%u)(objectClass=posixAccount))
