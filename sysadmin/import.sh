@@ -26,6 +26,7 @@
 
 #variables
 #settings
+DRYRUN=0
 PROGNAME="import.sh"
 VERBOSE=1
 #substitutions
@@ -125,7 +126,7 @@ EOF
 _debug()
 {
 	[ $VERBOSE -ge 3 ] && echo "$@" 1>&2
-	"$@"
+	[ $DRYRUN -ne 0 ] || "$@"
 }
 
 
@@ -139,14 +140,17 @@ _info()
 #usage
 _usage()
 {
-	echo "Usage: $PROGNAME [-qv][-u user] domain" 1>&2
+	echo "Usage: $PROGNAME [-nqv][-u user] domain" 1>&2
 	return 1
 }
 
 
 #main
-while getopts "O:qu:v" name; do
+while getopts "nO:qu:v" name; do
 	case "$name" in
+		n)
+			DRYRUN=1
+			;;
 		O)
 			export "${OPTARG%%=*}"="${OPTARG#*=}"
 			;;
