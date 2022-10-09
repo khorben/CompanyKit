@@ -116,7 +116,7 @@ _import_host()
 		[ $? -eq 0 ] || ret=4
 		$DEBUG $RM -- "$tmpfile"
 	done << EOF
-$($DEBUG $FIND "$prefix/files" -type f)
+$([ -d "$prefix/files" ] && $DEBUG $FIND "$prefix/files" -type f)
 EOF
 	return $ret
 )}
