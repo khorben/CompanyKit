@@ -2,11 +2,11 @@
 # See slapd.conf(5) for details on configuration options.
 # This file should NOT be world readable.
 #
-include		@PKGSRC_SYSCONFDIR/openldap/schema/core.schema
-include		@PKGSRC_SYSCONFDIR/openldap/schema/cosine.schema
-include		@PKGSRC_SYSCONFDIR/openldap/schema/inetorgperson.schema
-include		@PKGSRC_SYSCONFDIR/openldap/schema/nis.schema
-include		@PKGSRC_SYSCONFDIR/openldap/schema/authldap.schema
+include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/core.schema
+include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/cosine.schema
+include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/inetorgperson.schema
+include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/nis.schema
+include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/authldap.schema
 
 # Define global ACLs to disable default read access.
 
@@ -18,7 +18,7 @@ pidfile		/var/openldap/run/slapd.pid
 argsfile	/var/openldap/run/slapd.args
 
 # Load dynamic backend modules:
-modulepath	@PKGSRC_PREFIX/lib/openldap
+modulepath	@@PKGSRC_PREFIX@@/lib/openldap
 moduleload	back_mdb.la
 # moduleload	back_ldap.la
 
@@ -54,11 +54,11 @@ disallow	bind_anon
 access to attrs=userPassword
 	by self write
 	by anonymous auth
-	by dn.base="cn=@LDAP_ADMIN_USERNAME@,@LDAP_SUFFIX@" write
+	by dn.base="cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@" write
 	by * none
 access to *
 	by self write
-	by dn.base="cn=@LDAP_ADMIN_USERNAME@,@LDAP_SUFFIX@" write
+	by dn.base="cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@" write
 	by * read
 
 #######################################################################
@@ -76,8 +76,8 @@ database config
 
 database	mdb
 maxsize		1073741824
-suffix		"@LDAP_SUFFIX@"
-rootdn		"cn=@LDAP_ADMIN_USERNAME@,@LDAP_SUFFIX@"
+suffix		"@@LDAP_SUFFIX@@"
+rootdn		"cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@"
 # Cleartext passwords, especially for the rootdn, should
 # be avoid.  See slappasswd(8) and slapd.conf(5) for details.
 # Use of strong authentication encouraged.

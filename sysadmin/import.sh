@@ -106,12 +106,12 @@ _import_host()
 
 		#apply substitutions
 		$DEBUG $SED \
-			-e "s/cn=$LDAP_ADMIN_USERNAME/cn=@LDAP_ADMIN_USERNAME@/g" \
-			-e "s/$LDAP_SUFFIX/@LDAP_SUFFIX@/g" \
-			-e "s/$hostname/@HOSTNAME@/g" \
-			-e "s/$domain/@DOMAIN@/g" \
-			-e "s,$PKGSRC_SYSCONFDIR,@PKGSRC_SYSCONFDIR," \
-			-e "s,$PKGSRC_PREFIX,@PKGSRC_PREFIX," \
+			-e "s/cn=$LDAP_ADMIN_USERNAME/cn=@@LDAP_ADMIN_USERNAME@@/g" \
+			-e "s/$LDAP_SUFFIX/@@LDAP_SUFFIX@@/g" \
+			-e "s/$hostname/@@HOSTNAME@@/g" \
+			-e "s/$domain/@@DOMAIN@@/g" \
+			-e "s,$PKGSRC_SYSCONFDIR,@@PKGSRC_SYSCONFDIR@@," \
+			-e "s,$PKGSRC_PREFIX,@@PKGSRC_PREFIX@@," \
 			"$tmpfile" > "$filename"
 		[ $? -eq 0 ] || ret=4
 		$DEBUG $RM -- "$tmpfile"
