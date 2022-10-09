@@ -61,7 +61,6 @@ _import()
 		host="${host%/}"
 
 		_import_host "$host" "$domain" "$hostpath"	|| ret=2
-		return $ret
 	done
 	return $ret
 }
