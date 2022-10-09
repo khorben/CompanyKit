@@ -32,8 +32,11 @@ VERBOSE=1
 #executables
 DEBUG="_debug"
 FIND="find"
+MKTEMP="mktemp"
+RM="rm -f"
 SCP="scp"
 SCP_ARGS=
+SED="sed"
 
 
 #functions
@@ -48,6 +51,7 @@ _import()
 		host="${host%/}"
 
 		_import_host "$host" "$domain" "$hostpath"	|| ret=2
+		return $ret
 	done
 	return $ret
 }
@@ -62,18 +66,46 @@ _import_host()
 	_info "Importing $host.$domain"
 	while read filename; do
 		[ -n "$filename" ] || continue
-		_info "$host.$domain: Importing /${filename#$prefix}"
-		$DEBUG $SCP $SCP_ARGS "$host.$domain:/${filename#$prefix}" \
-			"$filename"
+		tmpfile=
+		case "$filename" in
+			*.in)
+				remotefile="/${filename#$prefix}"
+				remotefile="${remotefile%.in}"
+				tmpfile=$($DEBUG $MKTEMP)
+				if [ $? -ne 0 ]; then
+					ret=$?
+					continue
+				fi
+				localfile="$tmpfile"
+				;;
+			*)
+				remotefile="/${filename#$prefix}"
+				localfile="$filename"
+				;;
+		esac
+		hostname="$host.$domain"
+		_info "$hostname: Importing $remotefile"
+		$DEBUG $SCP $SCP_ARGS "$hostname:$remotefile" \
+			"$localfile"
 		if [ $? -ne 0 ]; then
-			ret=2
+			ret=3
+			[ -n "$tmpfile" ] && $RM -- "$tmpfile"
 			continue
 		fi
+		[ -z "$tmpfile" ] && continue
+
+		#apply substitutions
+		$DEBUG $SED \
+			-e "s/$hostname/@HOSTNAME@/g" \
+			-e "s/$domain/@DOMAIN@/g" \
+			"$tmpfile" > "$filename"
+		[ $? -eq 0 ] || ret=4
+		$DEBUG $RM -- "$tmpfile"
 	done << EOF
 $($DEBUG $FIND "$prefix" -type f)
 EOF
 	return $ret
-	)}
+)}
 
 
 #debug
