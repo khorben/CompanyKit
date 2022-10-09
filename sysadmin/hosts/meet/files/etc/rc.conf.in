@@ -21,7 +21,7 @@ rc_configured=YES
 #
 clear_tmp=NO
 fsck_flags="-pP"
-hostname=meet.@DOMAIN@
+hostname=@@HOSTNAME@@
 newsyslog=YES
 no_swap=YES
 random_file=/etc/entropy-file
