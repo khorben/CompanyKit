@@ -61,8 +61,9 @@ _import_host()
 	_info "Importing $host.$domain"
 	while read filename; do
 		[ -n "$filename" ] || continue
-		_info "$host.$domain: Importing ${filename#$prefix}"
-		$DEBUG $SCP "$host.$domain:${filename#$prefix}" "$filename"
+		_info "$host.$domain: Importing /${filename#$prefix}"
+		$DEBUG $SCP "$host.$domain:/${filename#$prefix}" \
+			"$filename"
 		if [ $? -ne 0 ]; then
 			ret=2
 			continue
