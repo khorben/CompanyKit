@@ -67,7 +67,7 @@ _sysadmin()
 	shift
 
 	case "$command" in
-		import)
+		apply|import)
 			"_sysadmin_$command" "$@"
 			return $?
 			;;
@@ -78,7 +78,7 @@ _sysadmin()
 	esac
 }
 
-_sysadmin_import()
+_sysadmin_apply()
 {
 	ret=0
 	all=0
@@ -121,11 +121,133 @@ _sysadmin_import()
 			host="${hostpath#hosts/}"
 			host="${host%/}"
 
-			_import_host "$host" "$domain" "$hostpath" \
+			_apply_host "$host" "$domain" "$hostpath" \
 				|| ret=2
 		done
 	elif [ $all -eq 0 -a $# -ge 1 ]; then
 		#apply specific hosts
+		for host in $@; do
+			host="${host%.$domain}"
+			hostpath="hosts/$host/"
+
+			_apply_host "$host" "$domain" "$hostpath" \
+				|| ret=2
+		done
+	else
+		_usage
+		return $?
+	fi
+
+	return $ret
+}
+
+_apply_host()
+{(
+	ret=0
+	host="$1"
+	domain="$2"
+	prefix="$3"
+
+	_info "Applying $host.$domain"
+	while read filename; do
+		[ -n "$filename" ] || continue
+		tmpfile=
+		case "$filename" in
+			*.in)
+				remotefile="${filename#$prefix/files}"
+				remotefile="${remotefile%.in}"
+				tmpfile=$($DEBUG $MKTEMP)
+				if [ $? -ne 0 ]; then
+					ret=$?
+					continue
+				fi
+				localfile="$tmpfile"
+				;;
+			*)
+				remotefile="${filename#$prefix/files}"
+				localfile="$filename"
+				;;
+		esac
+		hostname="$host.$domain"
+		_info "$hostname: Applying $remotefile"
+
+		if [ -n "$tmpfile" ]; then
+			#apply substitutions
+			$DEBUG $SED \
+				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
+				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
+				-e "s/@@HOSTNAME@@/$hostname/g" \
+				-e "s/@@DOMAIN@@/$domain/g" \
+				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
+				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				"$filename" > "$tmpfile"
+			if [ $? -ne 0 ]; then
+				ret=3
+				$DEBUG $RM -- "$tmpfile"
+				continue
+			fi
+		fi
+
+		$DEBUG $SCP $SCP_ARGS "$localfile" "$hostname:$remotefile"
+		if [ $? -ne 0 ]; then
+			ret=4
+			[ -n "$tmpfile" ] && $RM -- "$tmpfile"
+			continue
+		fi
+	done << EOF
+$([ -d "$prefix/files" ] && $DEBUG $FIND "$prefix/files" -type f)
+EOF
+	return $ret
+)}
+
+_sysadmin_import()
+{
+	ret=0
+	all=0
+
+	#parse the arguments
+	while getopts "anO:qu:v" name; do
+		case "$name" in
+			a)
+				all=1
+				;;
+			n)
+				DRYRUN=1
+				;;
+			O)
+				export "${OPTARG%%=*}"="${OPTARG#*=}"
+				;;
+			q)
+				VERBOSE=0
+				;;
+			u)
+				SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+				;;
+			v)
+				VERBOSE=$((VERBOSE + 1))
+				;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	domain="$1"
+	shift
+
+	#update substitutions
+	domain1=${domain##*.}
+	domain2=${domain%.$domain1}
+	[ -n "$LDAP_SUFFIX" ] || LDAP_SUFFIX="dc=$domain2,dc=$domain1"
+
+	if [ $all -ne 0 -a $# -eq 0 ]; then
+		#import all hosts
+		for hostpath in hosts/*/; do
+			host="${hostpath#hosts/}"
+			host="${host%/}"
+
+			_import_host "$host" "$domain" "$hostpath" \
+				|| ret=2
+		done
+	elif [ $all -eq 0 -a $# -ge 1 ]; then
+		#import specific hosts
 		for host in $@; do
 			host="${host%.$domain}"
 			hostpath="hosts/$host/"
@@ -216,7 +338,9 @@ _info()
 _usage()
 {
 	[ $# -ge 1 ] && echo "$PROGNAME: $@" 1>&2
-	echo "Usage: $PROGNAME import [-nqv][-u user] domain hostname..." 1>&2
+	echo "Usage: $PROGNAME apply [-nqv][-u user] domain hostname..." 1>&2
+	echo "       $PROGNAME apply -a [-nqv][-u user] domain" 1>&2
+	echo "       $PROGNAME import [-nqv][-u user] domain hostname..." 1>&2
 	echo "       $PROGNAME import -a [-nqv][-u user] domain" 1>&2
 	return 1
 }
