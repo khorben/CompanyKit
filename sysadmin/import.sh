@@ -27,7 +27,11 @@
 #variables
 #settings
 DRYRUN=0
+PACKAGE="CompanyKit"
+PREFIX="/usr/local"
 PROGNAME="import.sh"
+SYSCONFDIR="$PREFIX/etc"
+VENDOR="khorben"
 VERBOSE=1
 #substitutions
 LDAP_ADMIN_USERNAME="root"
@@ -43,6 +47,12 @@ RM="rm -f"
 SCP="scp"
 SCP_ARGS=
 SED="sed"
+
+#load local settings
+[ -f "$SYSCONFDIR/$VENDOR/$PACKAGE/$PROGNAME.conf" ] &&
+	. "$SYSCONFDIR/$VENDOR/$PACKAGE/$PROGNAME.conf"
+[ -n "$HOME" -a -f "$HOME/.config/$VENDOR/$PACKAGE/$PROGNAME.conf" ] &&
+	. "$HOME/.config/$VENDOR/$PACKAGE/$PROGNAME.conf"
 
 
 #functions
