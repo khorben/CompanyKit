@@ -28,6 +28,11 @@
 #settings
 PROGNAME="import.sh"
 VERBOSE=1
+#substitutions
+LDAP_ADMIN_USERNAME="root"
+LDAP_SUFFIX=
+PKGSRC_PREFIX="/usr/pkg"
+PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
 
 #executables
 DEBUG="_debug"
@@ -45,6 +50,11 @@ _import()
 {
 	ret=0
 	domain="$1"
+
+	#update substitutions
+	domain1=${domain##*.}
+	domain2=${domain%.$domain1}
+	[ -n "$LDAP_SUFFIX" ] || LDAP_SUFFIX="dc=$domain2,dc=$domain1"
 
 	for hostpath in hosts/*/; do
 		host="${hostpath#hosts/}"
@@ -96,8 +106,12 @@ _import_host()
 
 		#apply substitutions
 		$DEBUG $SED \
+			-e "s/cn=$LDAP_ADMIN_USERNAME/cn=@LDAP_ADMIN_USERNAME@/g" \
+			-e "s/$LDAP_SUFFIX/@LDAP_SUFFIX@/g" \
 			-e "s/$hostname/@HOSTNAME@/g" \
 			-e "s/$domain/@DOMAIN@/g" \
+			-e "s,$PKGSRC_SYSCONFDIR,@PKGSRC_SYSCONFDIR," \
+			-e "s,$PKGSRC_PREFIX,@PKGSRC_PREFIX," \
 			"$tmpfile" > "$filename"
 		[ $? -eq 0 ] || ret=4
 		$DEBUG $RM -- "$tmpfile"
