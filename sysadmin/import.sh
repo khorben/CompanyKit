@@ -79,7 +79,7 @@ _import_host()
 		tmpfile=
 		case "$filename" in
 			*.in)
-				remotefile="/${filename#$prefix}"
+				remotefile="${filename#$prefix/files}"
 				remotefile="${remotefile%.in}"
 				tmpfile=$($DEBUG $MKTEMP)
 				if [ $? -ne 0 ]; then
@@ -89,7 +89,7 @@ _import_host()
 				localfile="$tmpfile"
 				;;
 			*)
-				remotefile="/${filename#$prefix}"
+				remotefile="${filename#$prefix/files}"
 				localfile="$filename"
 				;;
 		esac
@@ -116,7 +116,7 @@ _import_host()
 		[ $? -eq 0 ] || ret=4
 		$DEBUG $RM -- "$tmpfile"
 	done << EOF
-$($DEBUG $FIND "$prefix" -type f)
+$($DEBUG $FIND "$prefix/files" -type f)
 EOF
 	return $ret
 )}
