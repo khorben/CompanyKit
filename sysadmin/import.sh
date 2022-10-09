@@ -33,6 +33,7 @@ VERBOSE=1
 DEBUG="_debug"
 FIND="find"
 SCP="scp"
+SCP_ARGS=
 
 
 #functions
@@ -62,7 +63,7 @@ _import_host()
 	while read filename; do
 		[ -n "$filename" ] || continue
 		_info "$host.$domain: Importing /${filename#$prefix}"
-		$DEBUG $SCP "$host.$domain:/${filename#$prefix}" \
+		$DEBUG $SCP $SCP_ARGS "$host.$domain:/${filename#$prefix}" \
 			"$filename"
 		if [ $? -ne 0 ]; then
 			ret=2
@@ -93,12 +94,23 @@ _info()
 #usage
 _usage()
 {
-	echo "Usage: $PROGNAME domain" 1>&2
+	echo "Usage: $PROGNAME [-u user] domain" 1>&2
 	return 1
 }
 
 
 #main
+while getopts "O:u:" name; do
+	case "$name" in
+		O)
+			export "${OPTARG%%=*}"="${OPTARG#*=}"
+			;;
+		u)
+			SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+			;;
+	esac
+done
+shift $((OPTIND - 1))
 if [ $# -ne 1 ]; then
 	_usage
 	exit $?
