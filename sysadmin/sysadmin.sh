@@ -29,7 +29,7 @@
 DRYRUN=0
 PACKAGE="CompanyKit"
 PREFIX="/usr/local"
-PROGNAME="import.sh"
+PROGNAME="sysadmin.sh"
 SYSCONFDIR="$PREFIX/etc"
 VENDOR="khorben"
 VERBOSE=1
@@ -56,10 +56,57 @@ SED="sed"
 
 
 #functions
-#import
-_import()
+#sysadmin
+_sysadmin()
+{
+	if [ $# -eq 0 ]; then
+		_usage "A command must be provided"
+		return $?
+	fi
+	command="$1"
+	shift
+
+	case "$command" in
+		import)
+			"_sysadmin_$command" "$@"
+			return $?
+			;;
+		*)
+			_usage "$command: Command not supported"
+			return $?
+			;;
+	esac
+}
+
+_sysadmin_import()
 {
 	ret=0
+
+	#parse the arguments
+	while getopts "nO:qu:v" name; do
+		case "$name" in
+			n)
+				DRYRUN=1
+				;;
+			O)
+				export "${OPTARG%%=*}"="${OPTARG#*=}"
+				;;
+			q)
+				VERBOSE=0
+				;;
+			u)
+				SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+				;;
+			v)
+				VERBOSE=$((VERBOSE + 1))
+				;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	if [ $# -ne 1 ]; then
+		_usage
+		return $?
+	fi
 	domain="$1"
 
 	#update substitutions
@@ -150,35 +197,11 @@ _info()
 #usage
 _usage()
 {
-	echo "Usage: $PROGNAME [-nqv][-u user] domain" 1>&2
+	[ $# -ge 1 ] && echo "$PROGNAME: $@" 1>&2
+	echo "Usage: $PROGNAME import [-nqv][-u user] domain hostname..." 1>&2
 	return 1
 }
 
 
 #main
-while getopts "nO:qu:v" name; do
-	case "$name" in
-		n)
-			DRYRUN=1
-			;;
-		O)
-			export "${OPTARG%%=*}"="${OPTARG#*=}"
-			;;
-		q)
-			VERBOSE=0
-			;;
-		u)
-			SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
-			;;
-		v)
-			VERBOSE=$((VERBOSE + 1))
-			;;
-	esac
-done
-shift $((OPTIND - 1))
-if [ $# -ne 1 ]; then
-	_usage
-	exit $?
-fi
-
-_import "$1"
+_sysadmin "$@"
