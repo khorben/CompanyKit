@@ -140,19 +140,25 @@ _info()
 #usage
 _usage()
 {
-	echo "Usage: $PROGNAME [-u user] domain" 1>&2
+	echo "Usage: $PROGNAME [-qv][-u user] domain" 1>&2
 	return 1
 }
 
 
 #main
-while getopts "O:u:" name; do
+while getopts "O:qu:v" name; do
 	case "$name" in
 		O)
 			export "${OPTARG%%=*}"="${OPTARG#*=}"
 			;;
+		q)
+			VERBOSE=0
+			;;
 		u)
 			SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+			;;
+		v)
+			VERBOSE=$((VERBOSE + 1))
 			;;
 	esac
 done
