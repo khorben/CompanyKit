@@ -81,10 +81,14 @@ _sysadmin()
 _sysadmin_import()
 {
 	ret=0
+	all=0
 
 	#parse the arguments
-	while getopts "nO:qu:v" name; do
+	while getopts "anO:qu:v" name; do
 		case "$name" in
+			a)
+				all=1
+				;;
 			n)
 				DRYRUN=1
 				;;
@@ -103,23 +107,37 @@ _sysadmin_import()
 		esac
 	done
 	shift $((OPTIND - 1))
-	if [ $# -ne 1 ]; then
-		_usage
-		return $?
-	fi
 	domain="$1"
+	shift
 
 	#update substitutions
 	domain1=${domain##*.}
 	domain2=${domain%.$domain1}
 	[ -n "$LDAP_SUFFIX" ] || LDAP_SUFFIX="dc=$domain2,dc=$domain1"
 
-	for hostpath in hosts/*/; do
-		host="${hostpath#hosts/}"
-		host="${host%/}"
+	if [ $all -ne 0 -a $# -eq 0 ]; then
+		#apply all hosts
+		for hostpath in hosts/*/; do
+			host="${hostpath#hosts/}"
+			host="${host%/}"
 
-		_import_host "$host" "$domain" "$hostpath"	|| ret=2
-	done
+			_import_host "$host" "$domain" "$hostpath" \
+				|| ret=2
+		done
+	elif [ $all -eq 0 -a $# -ge 1 ]; then
+		#apply specific hosts
+		for host in $@; do
+			host="${host%.$domain}"
+			hostpath="hosts/$host/"
+
+			_import_host "$host" "$domain" "$hostpath" \
+				|| ret=2
+		done
+	else
+		_usage
+		return $?
+	fi
+
 	return $ret
 }
 
@@ -199,6 +217,7 @@ _usage()
 {
 	[ $# -ge 1 ] && echo "$PROGNAME: $@" 1>&2
 	echo "Usage: $PROGNAME import [-nqv][-u user] domain hostname..." 1>&2
+	echo "       $PROGNAME import -a [-nqv][-u user] domain" 1>&2
 	return 1
 }
 
