@@ -236,6 +236,10 @@ _apply_host_files()
 				fi
 				localfile="$tmpfile"
 				;;
+			*.sw?)
+				#XXX ignore
+				continue
+				;;
 			*)
 				remotefile="${filename#$prefix/files}"
 				localfile="$filename"
@@ -363,6 +367,10 @@ _import_host()
 					continue
 				fi
 				localfile="$tmpfile"
+				;;
+			*.sw?)
+				#XXX ignore
+				continue
 				;;
 			*)
 				remotefile="${filename#$prefix/files}"
