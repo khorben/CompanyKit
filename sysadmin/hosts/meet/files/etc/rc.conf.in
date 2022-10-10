@@ -21,7 +21,7 @@ rc_configured=YES
 #
 clear_tmp=NO
 fsck_flags="-pP"
-hostname=meet.@DOMAIN@
+hostname=@@HOSTNAME@@
 newsyslog=YES
 no_swap=YES
 random_file=/etc/entropy-file
@@ -31,7 +31,6 @@ virecover=NO
 #services
 dhcpcd=YES	dhcpcd_flags="-qb"
 inetd=NO
-postfix=YES
 sshd=YES
 
 #packages
@@ -39,4 +38,3 @@ jicofo=YES	jicofo_flags="-p /var/run/jicofo.pid -u jicofo -g jicofo /home/jicofo
 jvb=YES		jvb_flags="-p /var/run/jvb.pid -u jvb -g jvb /home/jvb/jvb.sh"
 nginx=YES
 prosody=YES
-saslauthd=YES	saslauthd_flags="-a ldap"
