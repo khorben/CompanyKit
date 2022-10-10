@@ -1,1 +1,1 @@
-PKGVULNURL=ftp://@GATEWAY_IP@/pub/NetBSD/packages/vulns/pkg-vulnerabilities
+PKGVULNURL=ftp://@@MIRROR_NETBSD@@/pub/NetBSD/packages/vulns/pkg-vulnerabilities
