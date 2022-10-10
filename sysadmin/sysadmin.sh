@@ -196,75 +196,32 @@ echo HOST_OS_VERSION \$($UNAME -r)
 EOF
 
 	#apply common files
-	#XXX re-factor
-	oldprefix="$prefix"
-	prefix="common"
-	while read filename; do
-		[ -n "$filename" ] || continue
-		tmpfile=
-		case "$filename" in
-			*.in)
-				remotefile="${filename#$prefix/files}"
-				remotefile="${remotefile%.in}"
-				tmpfile=$($DEBUG $MKTEMP)
-				if [ $? -ne 0 ]; then
-					ret=$?
-					continue
-				fi
-				localfile="$tmpfile"
-				;;
-			*)
-				remotefile="${filename#$prefix/files}"
-				localfile="$filename"
-				;;
-		esac
-		_info "$hostname: Applying $remotefile"
-
-		if [ -n "$tmpfile" ]; then
-			#apply substitutions
-			$DEBUG $SED \
-				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
-				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
-				-e "s/@@HOST_ARCHITECTURE@@/$HOST_ARCHITECTURE/g" \
-				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
-				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
-				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
-				-e "s/@@HOSTNAME@@/$hostname/g" \
-				-e "s/@@DOMAIN@@/$domain/g" \
-				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
-				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
-				"$filename" > "$tmpfile"
-			if [ $? -ne 0 ]; then
-				ret=4
-				$DEBUG $RM -- "$tmpfile"
-				continue
-			fi
-		fi
-
-		$DEBUG $SCP $SCP_ARGS "$localfile" "$hostname:$remotefile"
-		if [ $? -ne 0 ]; then
-			ret=5
-			[ -n "$tmpfile" ] && $RM -- "$tmpfile"
-			continue
-		fi
-	done << EOF
-$([ -d "common/files" ] && $DEBUG $FIND "common/files" -type f)
-EOF
-	prefix="$oldprefix"
+	_apply_host_files "$host" "$domain" "common" "$hostname"|| ret=$?
 
 	#apply packages
 	while read package; do
 		[ -n "$package" ] || continue
 		echo "$PKG_ADD $package" | $DEBUG $SSH $SSH_ARGS "$hostname" "$SH"
 		if [ $? -eq 0 ]; then
-			_error "$host: Could not install $package"
+			_error "$hostname: Could not install $package"
 			ret=6
 		fi
 	done << EOF
 $($CAT "common/packages.conf" "$prefix/packages.conf")
 EOF
 
-	#apply files
+	#apply host-specific files
+	_apply_host_files "$host" "$domain" "$prefix" "$hostname"|| ret=$?
+	return $ret
+)}
+
+_apply_host_files()
+{(
+	host="$1"
+	domain="$2"
+	prefix="$3"
+	hostname="$4"
+
 	while read filename; do
 		[ -n "$filename" ] || continue
 		tmpfile=
@@ -463,6 +420,14 @@ _error()
 _info()
 {
 	echo "$PROGNAME: $@"
+}
+
+
+#warning
+_warning()
+{
+	_error "warning: $@"
+	return $?
 }
 
 
