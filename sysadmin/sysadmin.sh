@@ -171,18 +171,21 @@ _apply_host()
 		case "$variable" in
 			HOST_ARCHITECTURE)
 				HOST_ARCHITECTURE="$value"
-				_info "HOST_ARCHITECTURE=$HOST_ARCHITECTURE"
 				;;
 			HOST_OS_VERSION_MAJOR)
 				HOST_OS_VERSION_MAJOR="$value"
 				;;
+			PKG_ADD)
+				PKG_ADD="$value"
+				;;
 			*)
-				#XXX ignore errors
-				_error "$variable: Unsupported remote variable"
+				_warning "$variable: Unsupported remote variable"
 				;;
 		esac
 	done << EOF
-$(echo "echo HOST_ARCHITECTURE \$($UNAME -m)" | $DEBUG $SSH $SSH_ARGS "$hostname" "$SH")
+$(echo "echo HOST_ARCHITECTURE \$($UNAME -m)
+[ -x '$PKGSRC_PREFIX/sbin/pkg_add' ] && echo PKG_ADD '$PKGSRC_PREFIX/sbin/pkg_add'" \
+| $DEBUG $SSH $SSH_ARGS "$hostname" "$SH")
 EOF
 
 	#apply common files
