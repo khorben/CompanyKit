@@ -36,8 +36,8 @@ VERBOSE=1
 #substitutions
 COMPANY_NAME="ACME"
 COMPANY_NAME_LONG="ACME, Inc."
-#XXX hard-coded
 HOST_ARCHITECTURE="amd64"
+#XXX hard-coded
 HOST_OS_VERSION_MAJOR="9"
 LDAP_ADMIN_USERNAME="root"
 LDAP_SUFFIX=
@@ -47,13 +47,19 @@ PKGSRC_PREFIX="/usr/pkg"
 PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
 
 #executables
+CAT="cat"
 DEBUG="_debug"
 FIND="find"
 MKTEMP="mktemp"
+PKG_ADD="/usr/sbin/pkg_add"
 RM="rm -f"
 SCP="scp"
 SCP_ARGS=
 SED="sed"
+SH="/bin/sh"
+SSH="ssh"
+SSH_ARGS="-T"
+UNAME="uname"
 
 #load local settings
 [ -f "$SYSCONFDIR/$VENDOR/$PACKAGE/$PROGNAME.conf" ] &&
@@ -107,6 +113,7 @@ _sysadmin_apply()
 				;;
 			u)
 				SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+				SSH_ARGS="$SSH_ARGS -o User=$OPTARG"
 				;;
 			v)
 				VERBOSE=$((VERBOSE + 1))
@@ -154,8 +161,34 @@ _apply_host()
 	host="$1"
 	domain="$2"
 	prefix="$3"
+	hostname="$host.$domain"
 
 	_info "Applying $host.$domain"
+
+	#learn about the host
+	while read variable value; do
+		[ -n "$variable" ] || continue
+		case "$variable" in
+			HOST_ARCHITECTURE)
+				HOST_ARCHITECTURE="$value"
+				_info "HOST_ARCHITECTURE=$HOST_ARCHITECTURE"
+				;;
+			HOST_OS_VERSION_MAJOR)
+				HOST_OS_VERSION_MAJOR="$value"
+				;;
+			*)
+				#XXX ignore errors
+				_error "$variable: Unsupported remote variable"
+				;;
+		esac
+	done << EOF
+$(echo "echo HOST_ARCHITECTURE \$($UNAME -m)" | $DEBUG $SSH $SSH_ARGS "$hostname" "$SH")
+EOF
+
+	#apply common files
+	#XXX re-factor
+	oldprefix="$prefix"
+	prefix="common"
 	while read filename; do
 		[ -n "$filename" ] || continue
 		tmpfile=
@@ -175,7 +208,6 @@ _apply_host()
 				localfile="$filename"
 				;;
 		esac
-		hostname="$host.$domain"
 		_info "$hostname: Applying $remotefile"
 
 		if [ -n "$tmpfile" ]; then
@@ -193,7 +225,7 @@ _apply_host()
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
-				ret=3
+				ret=4
 				$DEBUG $RM -- "$tmpfile"
 				continue
 			fi
@@ -201,7 +233,73 @@ _apply_host()
 
 		$DEBUG $SCP $SCP_ARGS "$localfile" "$hostname:$remotefile"
 		if [ $? -ne 0 ]; then
-			ret=4
+			ret=5
+			[ -n "$tmpfile" ] && $RM -- "$tmpfile"
+			continue
+		fi
+	done << EOF
+$([ -d "common/files" ] && $DEBUG $FIND "common/files" -type f)
+EOF
+	prefix="$oldprefix"
+
+	#apply packages
+	while read package; do
+		[ -n "$package" ] || continue
+		echo "$PKG_ADD $package" | $DEBUG $SSH $SSH_ARGS "$hostname" "$SH"
+		if [ $? -eq 0 ]; then
+			_error "$host: Could not install $package"
+			ret=6
+		fi
+	done << EOF
+$($CAT "common/packages.conf" "$prefix/packages.conf")
+EOF
+
+	#apply files
+	while read filename; do
+		[ -n "$filename" ] || continue
+		tmpfile=
+		case "$filename" in
+			*.in)
+				remotefile="${filename#$prefix/files}"
+				remotefile="${remotefile%.in}"
+				tmpfile=$($DEBUG $MKTEMP)
+				if [ $? -ne 0 ]; then
+					ret=7
+					continue
+				fi
+				localfile="$tmpfile"
+				;;
+			*)
+				remotefile="${filename#$prefix/files}"
+				localfile="$filename"
+				;;
+		esac
+		_info "$hostname: Applying $remotefile"
+
+		if [ -n "$tmpfile" ]; then
+			#apply substitutions
+			$DEBUG $SED \
+				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
+				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
+				-e "s/@@HOST_ARCHITECTURE@@/$HOST_ARCHITECTURE/g" \
+				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
+				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
+				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
+				-e "s/@@HOSTNAME@@/$hostname/g" \
+				-e "s/@@DOMAIN@@/$domain/g" \
+				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
+				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				"$filename" > "$tmpfile"
+			if [ $? -ne 0 ]; then
+				ret=8
+				$DEBUG $RM -- "$tmpfile"
+				continue
+			fi
+		fi
+
+		$DEBUG $SCP $SCP_ARGS "$localfile" "$hostname:$remotefile"
+		if [ $? -ne 0 ]; then
+			ret=9
 			[ -n "$tmpfile" ] && $RM -- "$tmpfile"
 			continue
 		fi
@@ -233,6 +331,7 @@ _sysadmin_import()
 				;;
 			u)
 				SCP_ARGS="$SCP_ARGS -o User=$OPTARG"
+				SSH_ARGS="$SSH_ARGS -o User=$OPTARG"
 				;;
 			v)
 				VERBOSE=$((VERBOSE + 1))
@@ -337,6 +436,14 @@ _debug()
 {
 	[ $VERBOSE -ge 3 ] && echo "$@" 1>&2
 	[ $DRYRUN -ne 0 ] || "$@"
+}
+
+
+#error
+_error()
+{
+	echo "$PROGNAME: $@" 1>&2
+	return 2
 }
 
 
