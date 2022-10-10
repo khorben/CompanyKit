@@ -37,8 +37,9 @@ VERBOSE=1
 COMPANY_NAME="ACME"
 COMPANY_NAME_LONG="ACME, Inc."
 HOST_ARCHITECTURE="amd64"
-#XXX hard-coded
-HOST_OS_VERSION_MAJOR="9"
+HOST_OS="NetBSD"
+HOST_OS_VERSION="9.0_STABLE"
+HOST_OS_VERSION_MAJOR="${HOST_OS_VERSION%%.*}"
 LDAP_ADMIN_USERNAME="root"
 LDAP_SUFFIX=
 MIRROR_EDGEBSD="192.168.1.1"
@@ -172,8 +173,12 @@ _apply_host()
 			HOST_ARCHITECTURE)
 				HOST_ARCHITECTURE="$value"
 				;;
-			HOST_OS_VERSION_MAJOR)
-				HOST_OS_VERSION_MAJOR="$value"
+			HOST_OS)
+				HOST_OS="$value"
+				;;
+			HOST_OS_VERSION)
+				HOST_OS_VERSION="${value%%_*}"
+				HOST_OS_VERSION_MAJOR="${value%%.*}"
 				;;
 			PKG_ADD)
 				PKG_ADD="$value"
@@ -184,6 +189,8 @@ _apply_host()
 		esac
 	done << EOF
 $(echo "echo HOST_ARCHITECTURE \$($UNAME -m)
+echo HOST_OS \$($UNAME -s)
+echo HOST_OS_VERSION \$($UNAME -r)
 [ -x '$PKGSRC_PREFIX/sbin/pkg_add' ] && echo PKG_ADD '$PKGSRC_PREFIX/sbin/pkg_add'" \
 | $DEBUG $SSH $SSH_ARGS "$hostname" "$SH")
 EOF
@@ -285,6 +292,8 @@ EOF
 				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
 				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
 				-e "s/@@HOST_ARCHITECTURE@@/$HOST_ARCHITECTURE/g" \
+				-e "s/@@HOST_OS@@/$HOST_OS/g" \
+				-e "s/@@HOST_OS_VERSION@@/$HOST_OS_VERSION/g" \
 				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
 				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
 				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
