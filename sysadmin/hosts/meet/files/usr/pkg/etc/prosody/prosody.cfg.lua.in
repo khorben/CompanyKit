@@ -257,7 +257,15 @@ unlimited_jids = {
 https_ports = { }
 
 VirtualHost "@@HOSTNAME@@"
-	authentication = "cyrus"
+	authentication = "ldap"
+	ldap_server = "auth.@@DOMAIN@@"
+	ldap_tls = false
+	ldap_rootdn = "cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@"
+	ldap_password = "secret"
+	ldap_base = "ou=Users,@@LDAP_SUFFIX@@"
+	ldap_filter = "(&(mail=$user@@@DOMAIN@@)(objectClass=posixAccount))"
+	ldap_scope = "onelevel"
+	ldap_mode = "bind"
 	allow_unencrypted_plain_auth = true
 	modules_enabled = {
 		"av_moderation";
