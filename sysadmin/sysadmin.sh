@@ -34,6 +34,8 @@ SYSCONFDIR="$PREFIX/etc"
 VENDOR="khorben"
 VERBOSE=1
 #substitutions
+COMPANY_NAME="ACME"
+COMPANY_NAME_LONG="ACME, Inc."
 LDAP_ADMIN_USERNAME="root"
 LDAP_SUFFIX=
 PKGSRC_PREFIX="/usr/pkg"
@@ -174,6 +176,8 @@ _apply_host()
 		if [ -n "$tmpfile" ]; then
 			#apply substitutions
 			$DEBUG $SED \
+				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
+				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
 				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
 				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
 				-e "s/@@HOSTNAME@@/$hostname/g" \
@@ -303,6 +307,8 @@ _import_host()
 
 		#apply substitutions
 		$DEBUG $SED \
+			-e "s/$COMPANY_NAME_LONG/@@COMPANY_NAME_LONG@@/g" \
+			-e "s/$COMPANY_NAME/@@COMPANY_NAME@@/g" \
 			-e "s/cn=$LDAP_ADMIN_USERNAME/cn=@@LDAP_ADMIN_USERNAME@@/g" \
 			-e "s/$LDAP_SUFFIX/@@LDAP_SUFFIX@@/g" \
 			-e "s/$hostname/@@HOSTNAME@@/g" \
