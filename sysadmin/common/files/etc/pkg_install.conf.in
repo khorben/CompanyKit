@@ -1,1 +1,2 @@
+PKG_PATH=ftp://@@MIRROR_EDGEBSD@@/pub/EdgeBSD/EdgeBSD-@@HOST_OS_VERSION_MAJOR@@/@@HOST_ARCHITECTURE@@/binary/packages/All
 PKGVULNURL=ftp://@@MIRROR_NETBSD@@/pub/NetBSD/packages/vulns/pkg-vulnerabilities

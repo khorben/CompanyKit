@@ -8,7 +8,6 @@ export PATH=${PATH}:/usr/X11R7/bin
 # Uncomment the following line(s) to install binary packages
 # from cdn.NetBSD.org via pkg_add.  (See also pkg_install.conf)
 #export PKG_PATH="http://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.|cut -f 1 -d_)/All"
-export PKG_PATH="ftp://@@MIRROR_EDGEBSD@@/pub/EdgeBSD/EdgeBSD-$(uname -r | (read v; echo ${v%%.*}))/$(uname -m)/binary/packages/All"
 
 export BLOCKSIZE=1k
 
