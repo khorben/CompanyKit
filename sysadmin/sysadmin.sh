@@ -252,14 +252,16 @@ _apply_host_files()
 			$DEBUG $SED \
 				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
 				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
+				-e "s/@@DOMAIN@@/$domain/g" \
 				-e "s/@@HOST_ARCHITECTURE@@/$HOST_ARCHITECTURE/g" \
 				-e "s/@@HOST_OS@@/$HOST_OS/g" \
 				-e "s/@@HOST_OS_VERSION@@/$HOST_OS_VERSION/g" \
 				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
+				-e "s/@@HOSTNAME@@/$hostname/g" \
 				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
 				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
-				-e "s/@@HOSTNAME@@/$hostname/g" \
-				-e "s/@@DOMAIN@@/$domain/g" \
+				-e "s/@@MIRROR_EDGEBSD@@/$MIRROR_EDGEBSD/g" \
+				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
 				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
 				"$filename" > "$tmpfile"
