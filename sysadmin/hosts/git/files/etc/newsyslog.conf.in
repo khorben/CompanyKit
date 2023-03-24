@@ -19,3 +19,4 @@
 #nginx
 /var/log/nginx/access.log nginx:nginx	640  7    *	24  Z /var/run/nginx.pid SIGUSR1
 /var/log/nginx/error.log  nginx:nginx	640  7    *	24  Z /var/run/nginx.pid SIGUSR1
+/var/www/@@HOSTNAME@@/log/access.log  nginx:nginx	640  7    *	24  Z /var/run/nginx.pid SIGUSR1
