@@ -54,12 +54,10 @@ disallow	bind_anon
 access to attrs=userPassword
 	by self write
 	by anonymous auth
-	by dn.base="cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@" write
 	by * none
 access to *
 	by self write
-	by dn.base="cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@" write
-	by * read
+	by users read
 
 #######################################################################
 # config database definitions
