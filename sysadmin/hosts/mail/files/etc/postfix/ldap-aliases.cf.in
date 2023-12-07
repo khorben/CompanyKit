@@ -1,0 +1,9 @@
+server_host = auth.@@DOMAIN@@
+version = 3
+bind = yes
+bind_dn = uid=@@LDAP_POSTFIX_USERNAME@@,ou=@@LDAP_SYSTEM_OU@@,@@LDAP_SUFFIX@@
+bind_pw = @@LDAP_POSTFIX_PASSWORD@@
+search_base = ou=@@LDAP_ALIASES_OU@@,@@LDAP_SUFFIX@@
+query_filter = (&(mail=%s)(objectClass=CourierMailAlias))
+scope = one
+result_attribute = maildrop
