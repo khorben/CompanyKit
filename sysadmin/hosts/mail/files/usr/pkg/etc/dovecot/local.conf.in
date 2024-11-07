@@ -1,0 +1,18 @@
+protocols = imap lmtp sieve
+login_greeting = IMAPd ready.
+login_trusted_networks = 127.0.0.1/8
+disable_plaintext_auth = yes
+auth_mechanisms = plain
+!include conf.d/auth-ldap.conf.ext
+lda_mailbox_autocreate = yes
+lda_mailbox_autosubscribe = yes
+mail_location = maildir:~/Mail
+first_valid_uid = 2000
+mailbox_list_index = yes
+default_vsz_limit = 384M
+ssl = required
+ssl_cert = </usr/pkg/etc/EdgeBSD/edgebsd-tls/imap.@@DOMAIN@@.crt
+ssl_key = </usr/pkg/etc/EdgeBSD/edgebsd-tls/imap.@@DOMAIN@@.key
+ssl_min_protocol = TLSv1.2
+ssl_cipher_list = ALL:!LOW:!SSLv2:!SSLv3:!EXP:!aNULL
+ssl_prefer_server_ciphers = yes
