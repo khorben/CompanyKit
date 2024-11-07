@@ -26,7 +26,7 @@ hosts = auth.@@DOMAIN@@:389
 
 # Distinguished Name - the username used to login to the LDAP server.
 # Leave it commented out to bind anonymously (useful with auth_bind=yes).
-dn = uid=@@LDAP_USERNAME_DOVECOT@@,ou=System,@@LDAP_SUFFIX@@
+dn = uid=@@LDAP_USERNAME_DOVECOT@@,ou=@@LDAP_SYSTEM_OU@@,@@LDAP_SUFFIX@@
 
 # Password for LDAP server, if dn is specified.
 dnpass = @@LDAP_PASSWORD_DOVECOT@@
@@ -83,14 +83,14 @@ auth_bind = yes
 # For example:
 #   auth_bind_userdn = cn=%u,ou=people,o=org
 #
-auth_bind_userdn = mail=%u,ou=Users,dc=defora,dc=net
+auth_bind_userdn = mail=%u,ou=@@LDAP_USERS_OU@@,dc=defora,dc=net
 
 # LDAP protocol version to use. Likely 2 or 3.
 #ldap_version = 3
 
 # LDAP base. %variables can be used here.
 # For example: dc=mail, dc=example, dc=org
-base = ou=Users,@@LDAP_SUFFIX@@
+base = ou=@@LDAP_USERS_OU@@,@@LDAP_SUFFIX@@
 
 # Dereference: never, searching, finding, always
 #deref = never

@@ -259,14 +259,14 @@ https_ports = { }
 VirtualHost "@@HOSTNAME@@"
 	authentication = "ldap"
 	ldap_server = "auth.@@DOMAIN@@"
-	ldap_tls = false
-	ldap_rootdn = "cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@"
-	ldap_password = "secret"
-	ldap_base = "ou=Users,@@LDAP_SUFFIX@@"
+	ldap_tls = true
+	ldap_rootdn = "uid=@@LDAP_PROSODY_USERNAME@@,ou=@@LDAP_SYSTEM_OU@@,@@LDAP_SUFFIX@@"
+	ldap_password = "@@LDAP_PROSODY_PASSWORD@@"
+	ldap_base = "ou=@@LDAP_USERS_OU@@,@@LDAP_SUFFIX@@"
 	ldap_filter = "(&(mail=$user@@@DOMAIN@@)(objectClass=posixAccount))"
 	ldap_scope = "onelevel"
 	ldap_mode = "bind"
-	allow_unencrypted_plain_auth = true
+	allow_unencrypted_plain_auth = false
 	modules_enabled = {
 		"av_moderation";
 		"conference_duration";
