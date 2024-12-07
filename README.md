@@ -7,23 +7,25 @@ booting a small company, all self-hosted and supported by Open Source.
 The first step consists in the generation of the configuration files relevant to
 the initial set of services:
 
-* Central authentication with LDAP
+* Central authentication with [OpenLDAP](https://www.openldap.org/)
 * DNS zone with BIND
 * E-Mail infrastructure:
   * MX host with SpamAssassin
-  * IMAP and SMTP host with Dovecot 2 and Postfix
-  * Webmail host with Roundcube
-* Groupware with Nextcloud (CalDAV calendaring...)
-* Video-conferencing with Jitsi Meet
+  * IMAP and SMTP host with [Dovecot 2](https://www.dovecot.org/) and
+    [Postfix](https://www.postfix.org/)
+  * Webmail host with [Roundcube](https://roundcube.net/)
+* Groupware with [Nextcloud](https://www.nextcloud.com/) (CalDAV calendaring...)
+* Video-conferencing with [Jitsi Meet](https://jitsi.org/jitsi-meet/)
 * Public website
-* Reverse-proxy with Nginx
+* Reverse-proxy with [Nginx](https://nginx.org/)
 
 Target Platform
 ---------------
 
-The initial target platform is for a [NetBSD](https://www.NetBSD.org/)/
-[EdgeBSD](https://www.edgebsd.org/) NVMM hypervisor, and a collection of guest
-VMs, with the software deployed with [pkgsrc](https://www.pkgsrc.org/).
+The initial target platform is for a
+[NetBSD](https://www.NetBSD.org/)/[EdgeBSD](https://www.edgebsd.org/) NVMM
+hypervisor, and a collection of guest VMs, with the software deployed with
+[pkgsrc](https://www.pkgsrc.org/).
 
 Requirements
 ------------
