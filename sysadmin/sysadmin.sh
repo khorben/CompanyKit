@@ -571,7 +571,7 @@ _preview_host_files()
 				localfile="$filename"
 				;;
 		esac
-		_info "$hostname: Previewing ${filename#$prefix/files}"
+		_info "$hostname: Previewing file ${remotefile#$directory/$hostname/}"
 
 		if [ -n "$tmpfile" ]; then
 			#apply substitutions
