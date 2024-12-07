@@ -1,6 +1,7 @@
 #!/bin/sh
-#Copyright (c) 2024 Pierre Pronchery <khorben@defora.org>
-#This file is part of CompanyKit
+#$Id$
+#Copyright (c) 2014-2021 Pierre Pronchery <khorben@defora.org>
+#
 #Redistribution and use in source and binary forms, with or without
 #modification, are permitted provided that the following conditions are met:
 #
@@ -25,23 +26,94 @@
 
 #variables
 CONFIGSH="${0%/shlint.sh}/../config.sh"
-DOMAIN="example.com"
-PROGNAME="sysadmin.sh"
-SYSADMIN_ARGS="-nvvv"
-SYSADMIN_HOSTS="auth git mail meet mx rproxy webmail"
+PROGNAME="shlint.sh"
+PROJECTCONF="../project.conf"
 #executables
-SYSADMIN="./sysadmin.sh"
+DATE="date"
+DEBUG="_debug"
+ECHO="/bin/echo"
+FIND="find"
+MKDIR="mkdir -p"
+SHLINT="sh -n"
+SORT="sort -n"
+TR="tr"
 
 [ -f "$CONFIGSH" ] && . "$CONFIGSH"
 
 
 #functions
-#sysadmin
-_sysadmin()
+#shlint
+_shlint()
 {
-	#TODO: sort the files previewed
-	(cd "../sysadmin" &&
-		$SYSADMIN "preview" $SYSADMIN_ARGS $SYSADMIN_HOSTS)
+	res=0
+	subdirs=
+
+	$DATE
+	while read line; do
+		case "$line" in
+			"["*)
+				break
+				;;
+			"subdirs="*)
+				subdirs=${line#subdirs=}
+				subdirs=$(echo "$subdirs" | $TR ',' ' ')
+				;;
+		esac
+	done < "$PROJECTCONF"
+	if [ ! -n "$subdirs" ]; then
+		_error "Could not locate directories to analyze"
+		return $?
+	fi
+	for subdir in $subdirs; do
+		[ -d "../$subdir" ] || continue
+		while read filename; do
+			[ -n "$filename" ] || continue
+			echo
+			$ECHO -n "$filename:"
+			_shlint_file "$filename"
+			if [ $? -eq 0 ]; then
+				echo " OK"
+				echo "$PROGNAME: $filename: OK" 1>&2
+			else
+				echo "FAIL"
+				echo "$PROGNAME: $filename: FAIL" 1>&2
+				res=2
+			fi
+		done << EOF
+$($FIND "../$subdir" -type f -a -iname '*.sh' | $SORT)
+EOF
+	done
+	return $res
+}
+
+_shlint_file()
+{
+	$DEBUG $SHLINT "$filename" 2>&1				|| return 2
+	#try to detect invalid use of return
+	#XXX this test is not accurate (therefore a warning)
+	warn=0
+	while read line; do
+		case "$line" in
+			*return*)
+				warn=1
+				;;
+			*)
+				warn=0
+				;;
+		esac
+	done < "$filename"
+	if [ $warn -ne 0 ]; then
+		_error "$filename: return instead of exit in the global scope"
+	fi
+	return 0
+}
+
+
+#debug
+_debug()
+{
+	echo "$@" 1>&3
+	"$@"
 }
 
 
@@ -99,6 +171,6 @@ while [ $# -gt 0 ]; do
 	if [ -n "$dirname" -a "$dirname" != "$target" ]; then
 		$MKDIR -- "$dirname"				|| ret=$?
 	fi
-	_sysadmin > "$target"					|| ret=$?
+	_shlint > "$target"					|| ret=$?
 done
 exit $ret
