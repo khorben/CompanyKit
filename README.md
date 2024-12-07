@@ -2,7 +2,7 @@ CompanyKit
 ==========
 
 This project is about delivering a ready-to-use IT infrastructure suitable for
-booting a small company, all self-hosted and supported by Open Source.
+bootstrapping a small company, all self-hosted and supported by Open Source.
 
 The first step consists in the generation of the configuration files relevant to
 the initial set of services:
