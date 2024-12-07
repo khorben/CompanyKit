@@ -55,6 +55,7 @@ MIRROR_EDGEBSD="192.168.1.1"
 MIRROR_NETBSD="192.168.1.1"
 PKGSRC_PREFIX="/usr/pkg"
 PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
+POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT=20480000
 
 #executables
 CAT="cat"
@@ -291,6 +292,7 @@ _apply_host_files()
 				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
 				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
 				ret=8
@@ -597,6 +599,7 @@ _preview_host_files()
 				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
 				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
 				ret=8
