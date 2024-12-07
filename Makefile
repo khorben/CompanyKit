@@ -1,7 +1,7 @@
 PACKAGE	= CompanyKit
 VERSION	= 0.0.0
 VENDOR	= khorben
-SUBDIRS	= tests
+SUBDIRS	= sysadmin tests
 OBJDIR	=
 PREFIX	= /usr/local
 DESTDIR	=
@@ -45,6 +45,9 @@ dist:
 	$(RM) -r -- $(OBJDIR)$(PACKAGE)-$(VERSION)
 	$(LN) -s -- "$$PWD" $(OBJDIR)$(PACKAGE)-$(VERSION)
 	@cd $(OBJDIR). && $(TAR) -czvf $(PACKAGE)-$(VERSION)$(TGZEXT) -- \
+		$(PACKAGE)-$(VERSION)/sysadmin/Makefile \
+		$(PACKAGE)-$(VERSION)/sysadmin/sysadmin.sh \
+		$(PACKAGE)-$(VERSION)/sysadmin/project.conf \
 		$(PACKAGE)-$(VERSION)/tests/Makefile \
 		$(PACKAGE)-$(VERSION)/tests/shlint.sh \
 		$(PACKAGE)-$(VERSION)/tests/sysadmin.sh \
@@ -52,7 +55,6 @@ dist:
 		$(PACKAGE)-$(VERSION)/Makefile \
 		$(PACKAGE)-$(VERSION)/README.md \
 		$(PACKAGE)-$(VERSION)/config.sh \
-		$(PACKAGE)-$(VERSION)/sysadmin/sysadmin.sh \
 		$(PACKAGE)-$(VERSION)/project.conf
 	$(RM) -- $(OBJDIR)$(PACKAGE)-$(VERSION)
 
