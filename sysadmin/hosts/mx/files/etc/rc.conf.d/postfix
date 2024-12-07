@@ -1,0 +1,3 @@
+postfix_command='/usr/pkg/sbin/postfix'
+required_files='/usr/pkg/etc/postfix/main.cf'
+postconf='/usr/pkg/sbin/postconf'
