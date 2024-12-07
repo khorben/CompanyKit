@@ -15,6 +15,7 @@ the initial set of services:
     [Postfix](https://www.postfix.org/)
   * Webmail host with [Roundcube](https://roundcube.net/)
 * Groupware with [Nextcloud](https://www.nextcloud.com/) (CalDAV calendaring...)
+* Development server with [Gitea](https://about.gitea.com/)
 * Video-conferencing with [Jitsi Meet](https://jitsi.org/jitsi-meet/)
 * Public website
 * Reverse-proxy with [Nginx](https://nginx.org/)
@@ -40,6 +41,7 @@ Guest VMs
 |----------|----------------------------------------|
 | auth     | LDAP server                            |
 | cloud    | Nextcloud groupware instance           |
+| git      | Development server                     |
 | mail     | Mail server (sending and receiving)    |
 | meet     | Video-conferencing server (all in one) |
 | mx       | MX and anti-spam service (incoming)    |
