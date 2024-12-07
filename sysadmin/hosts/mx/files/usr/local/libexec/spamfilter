@@ -1,0 +1,9 @@
+#!/bin/sh
+
+
+SENDMAIL=/usr/pkg/sbin/sendmail
+SPAMASSASSIN=/usr/pkg/bin/spamc
+
+${SPAMASSASSIN} | ${SENDMAIL} -i "$@"
+
+exit $?
