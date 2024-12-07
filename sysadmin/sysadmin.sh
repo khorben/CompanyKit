@@ -88,7 +88,7 @@ UNAME="uname"
 _sysadmin()
 {
 	if [ $# -eq 0 ]; then
-		_usage "A command must be provided"
+		_usage "Command not provided"
 		return $?
 	fi
 	command="$1"
