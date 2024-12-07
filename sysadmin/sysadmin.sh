@@ -58,9 +58,13 @@ PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
 
 #executables
 CAT="cat"
+CP="cp -f"
 DEBUG="_debug"
 FIND="find"
+MKDIR="mkdir -p"
 MKTEMP="mktemp"
+MV="mv -f"
+NDEBUG="_ndebug"
 PKG_ADD="/usr/sbin/pkg_add"
 RM="rm -f"
 SCP="scp"
@@ -90,7 +94,7 @@ _sysadmin()
 	shift
 
 	case "$command" in
-		apply|import)
+		apply|import|preview)
 			"_sysadmin_$command" "$@"
 			return $?
 			;;
@@ -131,6 +135,10 @@ _sysadmin_apply()
 		esac
 	done
 	shift $((OPTIND - 1))
+	if [ $# -eq 0 ]; then
+		_usage "apply: Missing domain"
+		return $?
+	fi
 	domain="$1"
 	shift
 
@@ -173,7 +181,7 @@ _apply_host()
 	prefix="$3"
 	hostname="$host.$domain"
 
-	_info "Applying $host.$domain"
+	_info "Applying $hostname"
 
 	#learn about the host
 	while read variable value; do
@@ -216,7 +224,8 @@ EOF
 			ret=6
 		fi
 	done << EOF
-$($CAT "common/packages.conf" "$prefix/packages.conf")
+$($NDEBUG $CAT "common/packages.conf"
+[ -f "$prefix/packages.conf" ] && $NDEBUG $CAT "$prefix/packages.conf")
 EOF
 
 	#apply host-specific files
@@ -297,7 +306,7 @@ _apply_host_files()
 			continue
 		fi
 	done << EOF
-$([ -d "$prefix/files" ] && $DEBUG $FIND "$prefix/files" -type f)
+$([ -d "$prefix/files" ] && $NDEBUG $FIND "$prefix/files" -type f)
 EOF
 	return $ret
 )}
@@ -332,6 +341,10 @@ _sysadmin_import()
 		esac
 	done
 	shift $((OPTIND - 1))
+	if [ $# -eq 0 ]; then
+		_usage "import: Missing domain"
+		return $?
+	fi
 	domain="$1"
 	shift
 
@@ -422,7 +435,197 @@ _import_host()
 		[ $? -eq 0 ] || ret=4
 		$DEBUG $RM -- "$tmpfile"
 	done << EOF
-$([ -d "$prefix/files" ] && $DEBUG $FIND "$prefix/files" -type f)
+$([ -d "$prefix/files" ] && $NDEBUG $FIND "$prefix/files" -type f)
+EOF
+	return $ret
+)}
+
+
+#sysadmin_preview
+_sysadmin_preview()
+{
+	ret=0
+	all=0
+
+	#parse the arguments
+	while getopts "anO:qu:v" name; do
+		case "$name" in
+			a)
+				all=1
+				;;
+			n)
+				DRYRUN=1
+				;;
+			O)
+				export "${OPTARG%%=*}"="${OPTARG#*=}"
+				;;
+			q)
+				VERBOSE=0
+				;;
+			v)
+				VERBOSE=$((VERBOSE + 1))
+				;;
+		esac
+	done
+	shift $((OPTIND - 1))
+	if [ $# -le 1 ]; then
+		_usage "apply: Missing directory or domain"
+		return $?
+	fi
+	directory="$1"
+	domain="$2"
+	shift 2
+
+	#update substitutions
+	domain1=${domain##*.}
+	domain2=${domain%.$domain1}
+	[ -n "$LDAP_SUFFIX" ] || LDAP_SUFFIX="dc=$domain2,dc=$domain1"
+
+	if [ $all -ne 0 -a $# -eq 0 ]; then
+		#preview all hosts
+		for hostpath in hosts/*/; do
+			host="${hostpath#hosts/}"
+			host="${host%/}"
+
+			_preview_host "$directory" "$host" "$domain" \
+				"$hostpath"			|| ret=2
+		done
+	elif [ $all -eq 0 -a $# -ge 1 ]; then
+		#preview specific hosts
+		for host in $@; do
+			host="${host%.$domain}"
+			hostpath="hosts/$host/"
+
+			_preview_host "$directory" "$host" "$domain" \
+				"$hostpath"			|| ret=2
+		done
+	else
+		_usage
+		return $?
+	fi
+
+	return $ret
+}
+
+_preview_host()
+{
+	ret=0
+	directory="$1"
+	host="$2"
+	domain="$3"
+	prefix="$4"
+	hostname="$host.$domain"
+
+	_info "Previewing $hostname"
+
+	#preview packages
+	while read package; do
+		[ -n "$package" ] || continue
+		_info "$hostname: Package $package"
+	done << EOF
+$($NDEBUG $CAT "common/packages.conf"
+[ -f "$prefix/packages.conf" ] && $NDEBUG $CAT "$prefix/packages.conf")
+EOF
+
+	#preview common files
+	_preview_host_files "$directory" "$host" "$domain" "common" \
+		"$hostname"					|| ret=$?
+
+	#preview host-specific files
+	_preview_host_files "$directory" "$host" "$domain" "$prefix" \
+		"$hostname"					|| ret=$?
+	return $ret
+}
+
+_preview_host_files()
+{(
+	directory="$1"
+	host="$2"
+	domain="$3"
+	prefix="$4"
+	hostname="$5"
+
+	while read filename; do
+		[ -n "$filename" ] || continue
+		tmpfile=
+		case "$filename" in
+			*.in)
+				remotefile="${filename#$prefix/files}"
+				remotefile="$directory/$hostname/${remotefile%.in}"
+				#XXX creates a file even in dry-runs
+				tmpfile=$($NDEBUG $MKTEMP)
+				if [ $? -ne 0 ]; then
+					ret=7
+					continue
+				fi
+				localfile="$tmpfile"
+				;;
+			*.sw?)
+				#XXX ignore
+				continue
+				;;
+			*)
+				remotefile="$directory/$hostname/${filename#$prefix/files}"
+				localfile="$filename"
+				;;
+		esac
+		_info "$hostname: Previewing ${filename#$prefix/files}"
+
+		if [ -n "$tmpfile" ]; then
+			#apply substitutions
+			$NDEBUG $SED \
+				-e "s/@@COMPANY_NAME@@/$COMPANY_NAME/g" \
+				-e "s/@@COMPANY_NAME_LONG@@/$COMPANY_NAME_LONG/g" \
+				-e "s/@@DOMAIN@@/$domain/g" \
+				-e "s/@@HOST_ARCHITECTURE@@/$HOST_ARCHITECTURE/g" \
+				-e "s/@@HOST_OS@@/$HOST_OS/g" \
+				-e "s/@@HOST_OS_VERSION@@/$HOST_OS_VERSION/g" \
+				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
+				-e "s/@@HOSTNAME@@/$hostname/g" \
+				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
+				-e "s/@@LDAP_ALIASES_OU@@/$LDAP_ALIASES_OU/g" \
+				-e "s/@@LDAP_DOVECOT_USERNAME@@/$LDAP_DOVECOT_USERNAME/g" \
+				-e "s/@@LDAP_DOVECOT_PASSWORD@@/$LDAP_DOVECOT_PASSWORD/g" \
+				-e "s/@@LDAP_POSTFIX_USERNAME@@/$LDAP_POSTFIX_USERNAME/g" \
+				-e "s/@@LDAP_POSTFIX_PASSWORD@@/$LDAP_POSTFIX_PASSWORD/g" \
+				-e "s/@@LDAP_PROSODY_USERNAME@@/$LDAP_PROSODY_USERNAME/g" \
+				-e "s/@@LDAP_PROSODY_PASSWORD@@/$LDAP_PROSODY_PASSWORD/g" \
+				-e "s/@@LDAP_SUFFIX@@/$LDAP_SUFFIX/g" \
+				-e "s/@@LDAP_SYSTEM_OU@@/$LDAP_SYSTEM_OU/g" \
+				-e "s/@@LDAP_USERS_OU@@/$LDAP_USERS_OU/g" \
+				-e "s/@@MIRROR_EDGEBSD@@/$MIRROR_EDGEBSD/g" \
+				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
+				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
+				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				"$filename" > "$tmpfile"
+			if [ $? -ne 0 ]; then
+				ret=8
+				$NDEBUG $RM -- "$tmpfile"
+				continue
+			fi
+		fi
+
+		$DEBUG $MKDIR "${remotefile%/*}"
+		if [ $? -ne 0 ]; then
+			ret=10
+			[ -n "$tmpfile" ] && $NDEBUG $RM -- "$tmpfile"
+			continue
+		fi
+		if [ -n "$tmpfile" ]; then
+			[ $VERBOSE -gt 3 ] && $NDEBUG $CAT "$tmpfile"
+			$DEBUG $MV "$tmpfile" "$remotefile"
+		else
+			[ $VERBOSE -gt 3 ] && $NDEBUG $CAT "$localfile"
+			$DEBUG $CP "$localfile" "$remotefile"
+		fi
+		if [ $? -ne 0 ]; then
+			ret=11
+			[ -n "$tmpfile" ] && $NDEBUG $RM -- "$tmpfile"
+			continue
+		fi
+		[ -n "$tmpfile" -a -f "$tmpfile" ] && $NDEBUG $RM -- "$tmpfile"
+	done << EOF
+$([ -d "$prefix/files" ] && $NDEBUG $FIND "$prefix/files" -type f)
 EOF
 	return $ret
 )}
@@ -431,7 +634,7 @@ EOF
 #debug
 _debug()
 {
-	[ $VERBOSE -ge 3 ] && echo "$@" 1>&2
+	[ $VERBOSE -ge 4 ] && echo "$@" 1>&2
 	[ $DRYRUN -ne 0 ] || "$@"
 }
 
@@ -447,7 +650,15 @@ _error()
 #info
 _info()
 {
-	echo "$PROGNAME: $@"
+	[ $VERBOSE -ge 2 ] && echo "$PROGNAME: $@"
+}
+
+
+#ndebug
+_ndebug()
+{
+	[ $VERBOSE -ge 4 ] && echo "$@" 1>&2
+	"$@"
 }
 
 
@@ -467,6 +678,8 @@ _usage()
 	echo "       $PROGNAME apply -a [-nqv][-u user] domain" 1>&2
 	echo "       $PROGNAME import [-nqv][-u user] domain hostname..." 1>&2
 	echo "       $PROGNAME import -a [-nqv][-u user] domain" 1>&2
+	echo "       $PROGNAME preview [-nqv] directory domain hostname..." 1>&2
+	echo "       $PROGNAME preview -a [-nqv] directory domain" 1>&2
 	return 1
 }
 
