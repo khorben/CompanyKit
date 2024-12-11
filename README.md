@@ -39,7 +39,7 @@ Guest VMs
 
 | Hostname | Purpose                                |
 |----------|----------------------------------------|
-| auth     | LDAP server                            |
+| auth     | LDAP central authentication server     |
 | cloud    | Nextcloud groupware instance           |
 | git      | Development server                     |
 | mail     | Mail server (sending and receiving)    |
