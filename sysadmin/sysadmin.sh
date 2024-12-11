@@ -41,6 +41,8 @@ HOST_OS="NetBSD"
 HOST_OS_VERSION="9.0_STABLE"
 HOST_OS_VERSION_MAJOR="${HOST_OS_VERSION%%.*}"
 LDAP_ADMIN_USERNAME="root"
+LDAP_ADMIN_PASSWORD="changeme!"
+LDAP_ADMIN_PASSWORD_HASH=
 LDAP_ALIASES_OU="Aliases"
 LDAP_DOVECOT_USERNAME="dovecot"
 LDAP_DOVECOT_PASSWORD="changeme!"
@@ -55,6 +57,7 @@ MIRROR_EDGEBSD="192.168.1.1"
 MIRROR_NETBSD="192.168.1.1"
 PKGSRC_PREFIX="/usr/pkg"
 PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
+PKGSRC_VARBASE="$PKGSRC_PREFIX/var"
 POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT=20480000
 
 #executables
@@ -72,6 +75,7 @@ SCP="scp"
 SCP_ARGS=
 SED="sed"
 SH="/bin/sh"
+SLAPPASSWD="slappasswd"
 SSH="ssh"
 SSH_ARGS="-T"
 UNAME="uname"
@@ -93,6 +97,10 @@ _sysadmin()
 	fi
 	command="$1"
 	shift
+
+	#initialize variables as required
+	[ -z "$LDAP_ADMIN_PASSWORD_HASH" ] &&
+		LDAP_ADMIN_PASSWORD_HASH=$($DEBUG $SLAPPASSWD -s "$LDAP_ADMIN_PASSWORD")
 
 	case "$command" in
 		apply|import|preview)
@@ -278,6 +286,8 @@ _apply_host_files()
 				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
 				-e "s/@@HOSTNAME@@/$hostname/g" \
 				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
+				-e "s/@@LDAP_ADMIN_PASSWORD@@/$LDAP_ADMIN_PASSWORD/g" \
+				-e "s,@@LDAP_ADMIN_PASSWORD_HASH@@,$LDAP_ADMIN_PASSWORD_HASH,g" \
 				-e "s/@@LDAP_ALIASES_OU@@/$LDAP_ALIASES_OU/g" \
 				-e "s/@@LDAP_DOVECOT_USERNAME@@/$LDAP_DOVECOT_USERNAME/g" \
 				-e "s/@@LDAP_DOVECOT_PASSWORD@@/$LDAP_DOVECOT_PASSWORD/g" \
@@ -290,8 +300,9 @@ _apply_host_files()
 				-e "s/@@LDAP_USERS_OU@@/$LDAP_USERS_OU/g" \
 				-e "s/@@MIRROR_EDGEBSD@@/$MIRROR_EDGEBSD/g" \
 				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
-				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
+				-e "s,@@PKGSRC_VARBASE@@,$PKGSRC_VARBASE," \
 				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
@@ -585,6 +596,8 @@ _preview_host_files()
 				-e "s/@@HOST_OS_VERSION_MAJOR@@/$HOST_OS_VERSION_MAJOR/g" \
 				-e "s/@@HOSTNAME@@/$hostname/g" \
 				-e "s/@@LDAP_ADMIN_USERNAME@@/$LDAP_ADMIN_USERNAME/g" \
+				-e "s/@@LDAP_ADMIN_PASSWORD@@/$LDAP_ADMIN_PASSWORD/g" \
+				-e "s,@@LDAP_ADMIN_PASSWORD_HASH@@,$LDAP_ADMIN_PASSWORD_HASH,g" \
 				-e "s/@@LDAP_ALIASES_OU@@/$LDAP_ALIASES_OU/g" \
 				-e "s/@@LDAP_DOVECOT_USERNAME@@/$LDAP_DOVECOT_USERNAME/g" \
 				-e "s/@@LDAP_DOVECOT_PASSWORD@@/$LDAP_DOVECOT_PASSWORD/g" \
@@ -597,8 +610,9 @@ _preview_host_files()
 				-e "s/@@LDAP_USERS_OU@@/$LDAP_USERS_OU/g" \
 				-e "s/@@MIRROR_EDGEBSD@@/$MIRROR_EDGEBSD/g" \
 				-e "s/@@MIRROR_NETBSD@@/$MIRROR_NETBSD/g" \
-				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_PREFIX@@,$PKGSRC_PREFIX," \
+				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
+				-e "s,@@PKGSRC_VARBASE@@,$PKGSRC_VARBASE," \
 				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then

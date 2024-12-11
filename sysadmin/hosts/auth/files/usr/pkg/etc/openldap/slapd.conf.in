@@ -14,8 +14,8 @@ include		@@PKGSRC_SYSCONFDIR@@/openldap/schema/authldap.schema
 # service AND an understanding of referrals.
 #referral	ldap://root.openldap.org
 
-pidfile		/var/openldap/run/slapd.pid
-argsfile	/var/openldap/run/slapd.args
+pidfile		@@PKGSRC_VARBASE@@/run/openldap/slapd.pid
+argsfile	@@PKGSRC_VARBASE@@/run/openldap/slapd.args
 
 # Load dynamic backend modules:
 modulepath	@@PKGSRC_PREFIX@@/lib/openldap
@@ -29,6 +29,7 @@ moduleload	back_mdb.la
 # security ssf=1 update_ssf=112 simple_bind=64
 
 disallow	bind_anon
+require		authc
 
 # Sample access control policy:
 #	Root DSE: allow anyone to read it
@@ -79,13 +80,14 @@ rootdn		"cn=@@LDAP_ADMIN_USERNAME@@,@@LDAP_SUFFIX@@"
 # Cleartext passwords, especially for the rootdn, should
 # be avoid.  See slappasswd(8) and slapd.conf(5) for details.
 # Use of strong authentication encouraged.
-rootpw		secret
-# The database directory MUST exist prior to running slapd AND 
+rootpw		@@LDAP_ADMIN_PASSWORD_HASH@@
+# The database directory MUST exist prior to running slapd AND
 # should only be accessible by the slapd and slap tools.
 # Mode 700 recommended.
-directory	/var/openldap/openldap-data
+directory	@@PKGSRC_VARBASE@@/db/openldap
 # Indices to maintain
-index	objectClass	eq
+index	cn,sn,uid,mail	pres,eq,approx,sub
+index	objectClass	pres,eq
 
 #######################################################################
 # monitor database definitions
