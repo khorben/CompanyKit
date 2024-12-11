@@ -59,6 +59,7 @@ PKGSRC_PREFIX="/usr/pkg"
 PKGSRC_SYSCONFDIR="$PKGSRC_PREFIX/etc"
 PKGSRC_VARBASE="$PKGSRC_PREFIX/var"
 POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT=20480000
+USERNAME=
 
 #executables
 CAT="cat"
@@ -79,6 +80,7 @@ SLAPPASSWD="slappasswd"
 SSH="ssh"
 SSH_ARGS="-T"
 UNAME="uname"
+WHOAMI="whoami"
 
 #load local settings
 [ -f "$SYSCONFDIR/$VENDOR/$PACKAGE/$PROGNAME.conf" ] &&
@@ -99,8 +101,9 @@ _sysadmin()
 	shift
 
 	#initialize variables as required
-	[ -z "$LDAP_ADMIN_PASSWORD_HASH" ] &&
+	[ -n "$LDAP_ADMIN_PASSWORD_HASH" ] ||
 		LDAP_ADMIN_PASSWORD_HASH=$($DEBUG $SLAPPASSWD -s "$LDAP_ADMIN_PASSWORD")
+	[ -n "$USERNAME" ] || USERNAME=$($WHOAMI)
 
 	case "$command" in
 		apply|import|preview)
@@ -304,6 +307,7 @@ _apply_host_files()
 				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_VARBASE@@,$PKGSRC_VARBASE," \
 				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
+				-e "s/@@USERNAME@@/$USERNAME/g" \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
 				ret=8
@@ -614,6 +618,7 @@ _preview_host_files()
 				-e "s,@@PKGSRC_SYSCONFDIR@@,$PKGSRC_SYSCONFDIR," \
 				-e "s,@@PKGSRC_VARBASE@@,$PKGSRC_VARBASE," \
 				-e "s,@@POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT@@,$POSTFIX_EMAIL_MESSAGE_SIZE_LIMIT," \
+				-e "s/@@USERNAME@@/$USERNAME/g" \
 				"$filename" > "$tmpfile"
 			if [ $? -ne 0 ]; then
 				ret=8
