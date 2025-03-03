@@ -15,10 +15,10 @@ http {
     server_tokens     off;
 
     server {
-        listen        80;
-        server_name   @@HOSTNAME@@.@@DOMAIN@@;
+	listen        80;
+	server_name   @@HOSTNAME@@.@@DOMAIN@@;
 
-        access_log    off;
+	access_log    off;
 
 	root          @@PKGSRC_PREFIX@@/share/jitsi-meet;
 	index         index.html index.htm;
@@ -28,46 +28,46 @@ http {
 	ssi_types     application/x-javascript application/javascript;
 
 	location = /config.js {
-		alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/config.js;
+	    alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/config.js;
 	}
 
 	location = /interface_config.js {
-		alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/interface_config.js;
+	    alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/interface_config.js;
 	}
 
 	location = /title.html {
-		alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/title.html;
+	    alias @@PKGSRC_SYSCONFDIR@@/jitsi/meet/title.html;
 	}
 
 	location ~ ^/(libs|css|static|images|fonts|lang|sounds|connection_optimization|.well-known)/(.*)$ {
-		add_header "Access-Control-Allow-Origin" "*";
-		alias @@PKGSRC_PREFIX@@/share/jitsi-meet/$1/$2;
-		if ($arg_v) {
-			expires 1y;
-		}
+	    add_header "Access-Control-Allow-Origin" "*";
+	    alias @@PKGSRC_PREFIX@@/share/jitsi-meet/$1/$2;
+	    if ($arg_v) {
+		expires 1y;
+	    }
 	}
 
 	location ~ ^/([^/?&:'"]+)$ {
-		try_files $uri @root_path;
- 	}
-
-	location @root_path {
-		rewrite ^/(.*)$ / break;
+	    try_files $uri @root_path;
 	}
 
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   share/examples/nginx/html;
-        }
+	location @root_path {
+	    rewrite ^/(.*)$ / break;
+	}
+
+	error_page   500 502 503 504  /50x.html;
+	location = /50x.html {
+	    root   share/examples/nginx/html;
+	}
     }
 
     server {
-        listen 80;
-        server_name auth.@@HOSTNAME@@.@@DOMAIN@@;
+	listen 80;
+	server_name auth.@@HOSTNAME@@.@@DOMAIN@@;
 
-        location /.well-known/acme-challenge {
-            alias /var/www/acme;
-            try_files $uri =404;
-        }
+	location /.well-known/acme-challenge {
+	    alias /var/www/acme;
+	    try_files $uri =404;
+	}
     }
 }
